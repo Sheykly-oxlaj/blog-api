@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Posts", type: :request do
+  ################## test for the posts index action#############
   describe "GET /posts" do
     it "return an array of posts" do
       user = User.create!(name: "Anna", email: "anna@example.com", password: "password")
@@ -19,6 +20,24 @@ RSpec.describe "Posts", type: :request do
 
       expect(response).to have_http_status(200)
       expect(posts.length).to eq(3)
+    end
+  end
+
+  ################## test for the posts show action   #############
+  describe "GET /posts/:id" do
+    it "should return a hash with the appropiate attributes" do
+      user = User.create!(name: "Anna", email: "anna@example.com", password: "password")
+
+      Post.create!(title: "I am tired", body: "I am really, really tired, and just want to take a nap.", image: "https://www.cnet.com/health/sleep/how-to-nap-without-ruining-your-sleep/", user_id: user.id)
+
+      post_id = Post.first.id   #we need to declare this as a variable, because we do not know the id of the post being created
+      get "/posts/#{post_id}.json"
+      post = JSON.parse(response.body)
+
+      expect(response).to have_http_status(200)
+      expect(post["title"]).to eq("I am tired")
+      expect(post["body"]).to eq("I am really, really tired, and just want to take a nap.")
+      expect(post["image"]).to eq("https://www.cnet.com/health/sleep/how-to-nap-without-ruining-your-sleep/")
     end
   end
 end
