@@ -40,4 +40,59 @@ RSpec.describe "Posts", type: :request do
       expect(post["image"]).to eq("https://www.cnet.com/health/sleep/how-to-nap-without-ruining-your-sleep/")
     end
   end
+
+  ################## test for the posts create action   #############
+  # Due to user_authentication(?) we need to make a user, then generate a jwt by copying the code from app/controllers/sessions_controller.rb
+  describe "POST /posts" do
+    it "should create a post" do
+      user = User.create!(name: "Anna", email: "anna@example.com", password: "password")
+      # Code to generate jwt
+      jwt = JWT.encode(
+        {
+          user_id: user.id, # the data to encode
+          exp: 24.hours.from_now.to_i, # the expiration time
+        },
+        Rails.application.credentials.fetch(:secret_key_base), # the secret key
+        "HS256" # the encryption algorithm
+      )
+      #happy path lines 59-70
+      post "/posts", params: {
+                       title: "I am tired",
+                       body: "I am really, really tired, and just want to take a nap.",
+                       image: "https://www.cnet.com/health/sleep/how-to-nap-without-ruining-your-sleep/",
+                       user_id: user.id,
+                     },
+                     headers: { "Authorization" => "Bearer #{jwt}" }  #jwt is a variable from line 50
+
+      post = JSON.parse(response.body)
+
+      expect(response).to have_http_status(200)
+      expect(post["title"]).to eq("I am tired")
+    end
+
+    #sad path for invalid data
+    it "should return an error code for invalid data" do
+      user = User.create!(name: "Anna", email: "anna@example.com", password: "password")
+      jwt = JWT.encode(
+        {
+          user_id: user.id,
+          exp: 24.hours.from_now.to_i,
+        },
+        Rails.application.credentials.fetch(:secret_key_base),
+        "HS256"
+      )
+      post "/posts", params: {
+                       title: "I am tired",
+                       body: "I am really, really tired, and just want to take a nap.",
+                     },
+                     headers: { "Authorization" => "Bearer #{jwt}" }
+
+      expect(response).to have_http_status(418)
+    end
+
+    #sad path
+    it "should return an error without a jwt" do
+      post "/posts", params { }
+    end
+  end
 end
