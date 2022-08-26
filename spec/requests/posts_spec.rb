@@ -95,4 +95,12 @@ RSpec.describe "Posts", type: :request do
       post "/posts", params { }
     end
   end
+
+  ################## test for the posts update action   #############
+  describe "PATCH /posts/:id" do 
+    it "should update a post" do 
+      user = User.create!()
+  
+
+  ################## test for the posts destroy action   #############
 end
